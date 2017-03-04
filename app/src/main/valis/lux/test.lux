@@ -1,0 +1,22 @@
+(;module:
+   lux
+   lux/host
+   (lux (codata io))
+   (valis
+    (lux (android #as A)))
+   )
+
+## once again, can't use imported classes in the class method params
+(jvm-import android.view.View)
+
+## I couldn't define teh OnCLickListener as an anonymous class in here
+## I presume it was because it is a nested interface inside View
+(jvm-import #long lux.valis.luxapp.Test)
+
+## creates a onClickListener using the supplied function
+(def: #export (makeWithCB cb)
+  (-> (-> View Unit) lux.valis.luxapp.Test)
+  (object lux.valis.luxapp.Test []
+    []
+    (lux.valis.luxapp.Test (doIt [view View]) void
+                           (exec (cb view)))))

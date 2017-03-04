@@ -1,0 +1,90 @@
+(;module:
+   lux
+   (lux/codata function)
+   (lux host)
+)
+
+(jvm-import #long android.app.Activity
+  (runOnUiThread [Runnable] void)
+  (startActivity [android.content.Intent] void))
+(jvm-import java.lang.String)
+(jvm-import #long android.view.View$OnClickListener)
+(jvm-import #long android.view.View
+  (setOnClickListener [android.view.View$OnClickListener] void))
+(jvm-import #long android.util.Log
+   (#static d [String String] int))
+(jvm-import java.lang.CharSequence)
+(jvm-import android.content.Context)
+(jvm-import #long android.widget.TextView
+  (getText [] CharSequence)
+  (setText [CharSequence] void))
+(jvm-import lux.valis.luxapp.ViewCaster
+    (#static asString [CharSequence] String)
+    (#static asView [android.widget.TextView] android.view.View)
+    (#static asTextView [android.view.View] android.widget.TextView))
+(jvm-import android.support.v7.app.AppCompatActivity
+  (findViewById [int] android.view.View)
+  (setContentView [int] void))
+(jvm-import android.widget.Toast
+  (#static makeText [Context CharSequence int] Toast)
+  (#static LENGTH_SHORT int)
+  (show [] void))
+(jvm-import #long android.content.Intent
+  (new [])
+  (setClassName [String String] Intent))
+(jvm-import #long android.os.Bundle)
+
+(def: #export View android.view.View)
+(def: #export TextView android.widget.TextView)
+(def: #export asTextView ViewCaster.asTextView)
+(def: #export asView ViewCaster.asView)
+(def: #export startActivity android.app.Activity.startActivity)
+(def: #export runOnUiThread android.app.Activity.runOnUiThread)
+(def: #export Activity android.app.Activity)
+(def: #export Intent android.content.Intent)
+(def: #export Bundle android.os.Bundle)
+
+(def: #export (getIntent name)
+  (-> Text android.content.Intent)
+  (let [intent (android.content.Intent.new [])]
+    (exec
+      (android.content.Intent.setClassName ["lux.valis.luxapp" name] intent)
+      intent)))
+
+(def: #export (getText tv)
+  (-> android.widget.TextView Text)
+  (ViewCaster.asString (android.widget.TextView.getText [] tv)))
+
+(def: #export (setText txt tv)
+  (-> Text android.widget.TextView Unit)
+  (let [_ (android.widget.TextView.setText txt tv)]
+     []
+  ))
+
+(def: #export (toast ctx txt)
+  (-> Context Text Unit)
+  (let [t (Toast.makeText [ctx txt Toast.LENGTH_SHORT])]
+    (exec
+      (Toast.show [] t)
+      [])))
+
+(def: #export (findViewById id act)
+  (-> Int AppCompatActivity android.view.View)
+  (AppCompatActivity.findViewById id act))
+(def: #export (setContentView id act)
+  (-> Int AppCompatActivity Unit)
+  (let [_ (AppCompatActivity.setContentView id act)]
+    []
+    ))
+## (def: (makeListener func)
+##   (-> Text android.view.View$OnClickListener)
+##   (object android.view.View$OnClickListener []
+##     []
+##     (android.view.View$OnClickListener onClick [] [view android.view.View] void
+##                                        (exec (log! func)
+##                                          []))))
+(def: #export (setClick func view)
+  (-> android.view.View$OnClickListener android.view.View Unit)
+  (let [_ (android.view.View.setOnClickListener func view)]
+  []
+  ))

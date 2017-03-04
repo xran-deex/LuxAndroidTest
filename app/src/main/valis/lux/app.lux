@@ -1,0 +1,192 @@
+(;module:
+   lux
+   (lux (codata io)
+        (codata function))
+   (lux (data text/format)
+        control/monad
+        (data [text Monoid<Text>])
+        (data [struct/list "List/" Fold<List> Monoid<List>])
+        (concurrency [stm "stm"]
+                     [promise #* "Prom/" Monad<Promise>])
+        [compiler]
+        (macro ["s" syntax #+ syntax: Syntax])
+        host)
+   (valis
+    (lux (android #as A)
+         (test #as T)))
+   )
+
+## ok, these would ideally be exported from the android.lux module,
+## but the class: macro didn't like that
+(jvm-import android.os.Bundle)
+(jvm-import lux.valis.luxapp.LuxActivity)
+
+## the app resource ids
+(jvm-import valis.lux.app.R$layout
+  (#static activity_main int))
+(jvm-import valis.lux.app.R$id
+  (#static activity_main int)
+  (#static textView int))
+(jvm-import java.lang.Runnable)
+
+## this is defined in promise.lux, but I couldn't find it exported anywhere
+(syntax: (runnable expr)
+  (wrap (list (`' (object [java.lang.Runnable]
+                    []
+                    (java.lang.Runnable (run) void
+                                        (exec (~ expr)
+                                          [])))))))
+
+## The initial State value (a list of strings)
+(def: State
+  (-> (stm;Var (List Text)))
+  (stm;var (list "Hello")))
+
+## logs the value of the state (along with some other junk chars)
+(def: (printState stuff)
+  (-> (stm;Var (List Text)) Unit)
+  (run
+    (do Monad<IO>
+      [
+       ls (stm;read! stuff)
+      ]
+      (wrap (log! (List/fold append "sdkfkj" ls))))
+  ))
+
+## writes some stuff to the State
+(def: (appendToState stuff)
+  (-> (stm;Var (List Text)) Unit)
+  (run
+   (do Monad<IO>
+     [ls (stm;read! stuff)
+      _ (stm;write! (#;Cons "x" ls) stuff)
+      ]
+     (wrap []))
+   ))
+
+## sets the textview text to the current value of the state
+(def: (showState state tv)
+  (-> (stm;Var (List Text)) A;TextView Unit)
+  (run
+   (do Monad<IO>
+     [ls (stm;read! state)]
+     (let [txt (List/fold append "" ls)]
+       (wrap (A;setText txt tv)))
+   )))
+
+## Factorial? (This was just the first example function)
+(def: (fac acc n)
+  (-> Int Int Int)
+  (case n
+    0 acc
+    _ (fac (i.* n acc) (i.dec _))))
+
+## Logs and displays a Toast
+(def: (logIt ctx view)
+  (-> LuxActivity A;TextView Unit)
+  (let [txt (A;getText view)]
+    (exec
+      (A;toast ctx txt)
+      (log! txt))))
+
+## Displays a new Activity
+(def: (launch ctx view)
+  (-> LuxActivity A;View Unit)
+  (let [intent (A;getIntent "valis.lux.app.SecondActivity")]
+  (exec
+    (A;startActivity intent ctx))))
+
+(def: (_append txt)
+  (-> Text Text)
+  (append "x" txt))
+
+## Appends some text to the state and 'shows' it
+(def: (appendToTv tv)
+  (-> A;View Unit)
+  (let [_tv (A;asTextView tv)
+        txt (A;getText _tv)]
+    (exec
+      (appendToState State)
+      (showState State _tv))))
+
+## Executes the action after 2 seconds
+## Testing promise usage
+(def: (runProm action ctx txt)
+  (-> (-> A;Activity Text Unit) A;Activity Text Unit)
+  (exec
+    (do Monad<Promise>
+      [_ (wait +2000)
+       _ (wrap
+              (A;runOnUiThread [(runnable (action ctx txt))] ctx)
+              )
+       ]
+      (wrap []))
+    []
+  ))
+
+## displays a Toast message and also appends to the State and appends to the TextView
+(def: (toastCB ctx view)
+  (-> LuxActivity A;View Unit)
+  (exec
+    (appendToState State)
+    (let [tv (A;asTextView view)]
+      (A;setText (_append (A;getText tv)) tv))
+    (runProm A;toast ctx "Hello")))
+
+(class: MainActivity lux.valis.luxapp.LuxActivity []
+  (#public [] (new) []
+           [])
+  (lux.valis.luxapp.LuxActivity [] (onCreate [bundle Bundle]) void
+    (exec
+      (.super! [bundle])
+      (A;setContentView R$layout.activity_main _jvm_this)
+      (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))]
+        (showState State tv))
+      (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))
+            toastCallback (T;makeWithCB (toastCB _jvm_this))]
+        (exec
+          (A;setClick toastCallback tv)
+          ))
+      (let [view (A;findViewById R$id.activity_main _jvm_this)
+            test (T;makeWithCB (launch _jvm_this))]
+        (exec
+          (A;setClick test view)
+          ))
+      (log! "In onCreate!!! Woohoo!!!!!")
+      (log! "Hello World!!")
+      (log! (format "Factorial of 10: " (%i (fac 1 10))))
+
+      ## print the current value of the state Var
+      (printState State)
+      )
+   )
+
+  ## Overriding the onPause method...
+  (lux.valis.luxapp.LuxActivity [] (onPause) void
+    (exec
+      (.super! [])
+      (log! "In onPause")
+      )
+    )
+
+  ## Overriding the onStop method
+  (lux.valis.luxapp.LuxActivity [] (onStop) void
+    (exec
+      (.super! [])
+      )
+    )
+  )
+
+## Just testing out another Activity
+(class: SecondActivity lux.valis.luxapp.LuxActivity []
+  (#public [] (new) []
+           [])
+  (lux.valis.luxapp.LuxActivity [] (onCreate [bundle Bundle]) void
+        (exec
+          (.super! [bundle])
+          (A;setContentView R$layout.activity_main _jvm_this)
+          (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))]
+            (showState State tv))
+          )
+        )
+  )
