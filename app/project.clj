@@ -1,6 +1,7 @@
-(defproject java_interop "0.1.0-SNAPSHOT"
+(defproject android-test "0.1.0-SNAPSHOT"
   :plugins [[com.github.luxlang/lein-luxc "0.5.0"]]
-  :resource-paths ["src" "/home/randy/Android/Sdk/platforms/android-25/android.jar" 
+  :resource-paths ["src"
+                   "/home/randy/Android/Sdk/platforms/android-25/android.jar" 
                    "build/intermediates/classes/debug/"
                    "build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.1/jars/classes.jar"
                    "build/intermediates/exploded-aar/com.android.support/support-fragment/25.1.1/jars/classes.jar"
@@ -16,13 +17,14 @@
         ; :android {:sdk "/home/randy/Android/Sdk"
         ;           :version 25
         ;           :resources ["res" "temp/appcompat/res"]
-        ;           :support-lib "/home/randy/Android/Sdk/extras/android/m2repository/com/android/support/appcompat-v7/25.1.0/appcompat-v7-25.1.0-sources.jar"
-        ;           ;; :support-lib "temp/classes.jar"
+        ;           :manifest "src/main/AndroidManifest.xml"
+        ;           ; :support-lib "/home/randy/Android/Sdk/extras/android/m2repository/com/android/support/appcompat-v7/25.1.0/appcompat-v7-25.1.0-sources.jar"
         ;           :keystore {
         ;             :path "/home/randy/.android/debug.keystore"
         ;             :alias "androiddebugkey"
         ;             :password "android"
         ;                      }
+        ;           }
   }
   
   :source-paths ["src/main"]
