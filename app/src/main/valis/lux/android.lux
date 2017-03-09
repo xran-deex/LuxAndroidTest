@@ -18,10 +18,6 @@
 (jvm-import #long android.widget.TextView
   (getText [] CharSequence)
   (setText [CharSequence] void))
-(jvm-import lux.valis.luxapp.ViewCaster
-    (#static asString [CharSequence] String)
-    (#static asView [android.widget.TextView] android.view.View)
-    (#static asTextView [android.view.View] android.widget.TextView))
 (jvm-import android.support.v7.app.AppCompatActivity
   (findViewById [int] android.view.View)
   (setContentView [int] void))
@@ -36,8 +32,6 @@
 
 (def: #export View android.view.View)
 (def: #export TextView android.widget.TextView)
-(def: #export asTextView ViewCaster.asTextView)
-(def: #export asView ViewCaster.asView)
 (def: #export startActivity android.app.Activity.startActivity)
 (def: #export runOnUiThread android.app.Activity.runOnUiThread)
 (def: #export Activity android.app.Activity)
@@ -53,7 +47,7 @@
 
 (def: #export (getText tv)
   (-> android.widget.TextView Text)
-  (ViewCaster.asString (android.widget.TextView.getText [] tv)))
+  (:! String (android.widget.TextView.getText [] tv)))
 
 (def: #export (setText txt tv)
   (-> Text android.widget.TextView Unit)

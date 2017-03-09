@@ -103,7 +103,7 @@
 ## Appends some text to the state and 'shows' it
 (def: (appendToTv tv)
   (-> A;View Unit)
-  (let [_tv (A;asTextView tv)
+  (let [_tv (:! A;TextView tv)
         txt (A;getText _tv)]
     (exec
       (appendToState State)
@@ -129,7 +129,7 @@
   (-> LuxActivity A;View Unit)
   (exec
     (appendToState State)
-    (let [tv (A;asTextView view)]
+    (let [tv (:! A;TextView view)]
       (A;setText (_append (A;getText tv)) tv))
     (runProm A;toast ctx "Hello")))
 
@@ -140,11 +140,10 @@
     (exec
       (.super! [bundle])
       (A;setContentView R$layout.activity_main _jvm_this)
-      (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))]
-        (showState State tv))
-      (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))
+      (let [tv (:! A;TextView (A;findViewById R$id.textView _jvm_this))
             toastCallback (T;makeWithCB (toastCB _jvm_this))]
         (exec
+          (showState State tv)
           (A;setClick toastCallback tv)
           ))
       (let [view (A;findViewById R$id.activity_main _jvm_this)
@@ -185,7 +184,7 @@
         (exec
           (.super! [bundle])
           (A;setContentView R$layout.activity_main _jvm_this)
-          (let [tv (A;asTextView (A;findViewById R$id.textView _jvm_this))]
+          (let [tv (:! A;TextView (A;findViewById R$id.textView _jvm_this))]
             (showState State tv))
           )
         )
