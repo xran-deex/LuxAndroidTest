@@ -40,7 +40,7 @@
 ## The initial State value (a list of strings)
 (def: State
   (-> (stm;Var (List Text)))
-  (stm;var (list "Hello")))
+  (stm;var (list "Hello World")))
 
 ## logs the value of the state (along with some other junk chars)
 (def: (printState stuff)

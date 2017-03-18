@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.1"
+    buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "lux.valis.luxapp"
         minSdkVersion 16
@@ -21,34 +21,33 @@ android {
 
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-//    compile 'com.github.luxlang:luxc-jvm:0.5.0'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.1.1'
+    compile 'com.android.support:appcompat-v7:25.2.0'
     testCompile 'junit:junit:4.12'
 }
 
-task compileLux(type: Lux) {
-}
-afterEvaluate { project ->
-    project.tasks.compileDebugJavaWithJavac.finalizedBy compileLux
-}
-
-class Lux extends DefaultTask {
-
-    @TaskAction
-    void perform() {
-        println "Compiling"
-        // make sure to compile the R.java file prior to compiling the lux code
-        project.exec {
-            executable 'sh'
-            args '-c', 'javac -d src/main/lux -sourcepath build/generated/source/r/debug/ build/generated/source/r/debug/valis/lux/app/R.java'
-        }
-        project.exec {
-            executable 'sh'
-            args '-c', 'PATH=$PATH:~/.bin lein lux build'
+buildscript {
+    repositories {
+        jcenter()
+        flatDir {
+          dirs "libs"
         }
     }
+    dependencies {
+        classpath 'com.github.luxlang:luxc-jvm:0.5.0'
+        classpath 'com.github.luxlang:stdlib:0.5.0'
+        classpath 'com.github.luxlang:LuxGradlePlugin:0.1-SNAPSHOT'
+        classpath 'com.github.luxlang:LuxAndroidPlugin:0.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'com.github.luxlang.lux'
+apply plugin: 'com.github.luxlang.android'
+
+lux {
+  program = 'valis/lux/app'
+  sourcePath = 'src/main'
+  build = 'debug'
 }
